@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.4.4</version>
+		<version>2.7.18</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.Midterm</groupId>
@@ -60,6 +60,7 @@
 </properties>
 
 <profiles>
+	
   <profile>
     <id>java11</id>
     <properties>
@@ -72,6 +73,15 @@
   <profile>
     <id>java17</id>
   </profile>
+
+  <profile>
+    <id>java8</id>
+    <properties>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+        <maven.compiler.release>8</maven.compiler.release>
+    </properties>
+  </profile>	
 </profiles>
 
 </project>
