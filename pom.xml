@@ -17,12 +17,12 @@
     <description>Demo project for Spring Boot</description>
     <url/>
 
-     <properties>
+    <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
-        <java.version>11</java.version>
-        <maven.compiler.release>11</maven.compiler.release>
+        <maven.compiler.source>8</maven.compiler.source> <!-- Using Java 8 -->
+        <maven.compiler.target>8</maven.compiler.target> <!-- Using Java 8 -->
+        <java.version>8</java.version>
+        <maven.compiler.release>8</maven.compiler.release>
         <junit.version>5.9.2</junit.version>
     </properties>
 
@@ -60,36 +60,56 @@
                 <artifactId>sonar-maven-plugin</artifactId>
                 <version>3.7.0.1746</version> <!-- Last Java 8 compatible version -->
             </plugin>
+
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
-		<plugin>
-            <groupId>com.google.cloud.tools</groupId>
-            <artifactId>jib-maven-plugin</artifactId>
-            <version>3.3.1</version>
-        	</plugin>
+
+            <!-- Jib plugin for building Docker image -->
+            <plugin>
+                <groupId>com.google.cloud.tools</groupId>
+                <artifactId>jib-maven-plugin</artifactId>
+                <version>3.3.1</version>
+                <configuration>
+                    <from>
+                        <image>eclipse-temurin:8-jre</image> <!-- Use Java 8 based image -->
+                    </from>
+                    <to>
+                        <image>registry.hub.docker.com/ninadpatil22/java_arithmetic_code</image>
+                        <auth>
+                            <username>${env.DOCKER_USERNAME}</username>
+                            <password>${env.DOCKER_PASSWORD}</password>
+                        </auth>
+                    </to>
+                    <container>
+                        <mainClass>com.midterm.JavaArithmeticCodeApplication</mainClass> <!-- Replace with your main class -->
+                    </container>
+                </configuration>
+            </plugin>
+
             <!-- jacoco plugin for code coverage on Sonarqube -->
-			<plugin>
-			    <groupId>org.jacoco</groupId>
-			    <artifactId>jacoco-maven-plugin</artifactId>
-			    <version>0.8.8</version> <!-- Last Java 8 compatible version -->
-			    <executions>
-			        <execution>
-			            <goals>
-			                <goal>prepare-agent</goal>
-			            </goals>
-			        </execution>
-			        <execution>
-			            <id>report</id>
-			            <phase>test</phase>
-			            <goals>
-			                <goal>report</goal>
-			            </goals>
-			        </execution>
-			    </executions>
-			</plugin>
-		 <!-- For creating executable JAR -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.8</version> <!-- Last Java 8 compatible version -->
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- For creating executable JAR -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
@@ -97,7 +117,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>com.midterm.todolist.TodolistApplication</mainClass>
+                            <mainClass>com.midterm.JavaArithmeticCodeApplication</mainClass> <!-- Replace with your main class -->
                         </manifest>
                     </archive>
                     <descriptorRefs>
