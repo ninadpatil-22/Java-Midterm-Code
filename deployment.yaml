@@ -13,10 +13,10 @@ spec:
         app: java-arithmetic
     spec:
       containers:
-      - name: java-arithmetic-container
+      - name: java-app
         image: ninadpatil22/java_arithmetic_code:latest
         ports:
-        - containerPort: 8080
+        - containerPort: 8080  # Adjust if your app runs on a different port
 ---
 apiVersion: v1
 kind: Service
@@ -29,6 +29,5 @@ spec:
   ports:
     - protocol: TCP
       port: 80
-      targetPort: 8080
-      nodePort: 30080
-  
+      targetPort: 8080  
+      nodePort: 30080   
