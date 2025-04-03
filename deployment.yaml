@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: java-arithmetic-app
+  labels:
+    app: java-arithmetic
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: java-arithmetic
+  template:
+    metadata:
+      labels:
+        app: java-arithmetic
+    spec:
+      containers:
+      - name: java-arithmetic-container
+        image: ninadpatil22/java_arithmetic_code:latest
+        ports:
+        - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: java-arithmetic-service
+spec:
+  selector:
+    app: java-arithmetic
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+  type: LoadBalancer
