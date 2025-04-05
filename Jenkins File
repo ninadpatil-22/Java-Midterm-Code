@@ -1,0 +1,131 @@
+pipeline {
+    agent any
+
+    environment {
+        SONARQUBE_URL = 'http://host.docker.internal:9191'
+        SONAR_TOKEN = credentials('Sonar_Token')
+        GIT_REPO = 'https://github.com/ninadpatil-22/Java-Midterm-Code.git'
+        BRANCH   = 'main'
+        DOCKER_USERNAME = 'ninadpatil22'
+        JAR_FILE = 'target/Java_Arithmetic_Code-0.0.1-SNAPSHOT-jar-with-dependencies.jar'
+        
+    }
+
+    stages {
+        stage('Checkout Code') {
+            agent any
+            steps {
+                echo "Checking out code from ${BRANCH} branch..."
+                git branch: "${BRANCH}", url: "${GIT_REPO}"
+            }
+        }
+
+        stage('Build with Java 17') {
+            agent {
+                docker {
+                    image 'maven:3.9.1-eclipse-temurin-17'
+                    args '-u root'
+                }
+            }
+            steps {
+                echo "Building with Java 17..."
+                sh 'mvn clean package'
+            }
+        }
+
+        stage('Test with Java 11') {
+            agent {
+                docker {
+                    image 'maven:3.9.1-eclipse-temurin-11'
+                    args '-u root'
+                }
+            }
+            steps {
+                sh 'mvn test'
+            }
+        }
+
+        stage('Code Quality Analysis with Java 8 & SonarQube') {
+            agent {
+                docker {
+                    image 'maven:3.8.6-jdk-8'
+                    args '-v $HOME/.m2:/root/.m2 --network host'
+                }
+            }
+            steps {
+                echo "Running SonarQube analysis..."
+                sh """
+                mvn sonar:sonar \
+                    -Dsonar.host.url=${SONARQUBE_URL} \
+                    -Dsonar.login=${SONAR_TOKEN} \
+                    -Dsonar.projectKey=Java_Arithmetic_Code
+                """
+            }
+        }
+
+       stage('Build Docker Image') {
+            agent any
+            steps {
+                script {
+                    echo "Building Docker image..."
+                    
+                    // Verify the correct JAR exists
+                    sh 'ls -la target'  // Debug: Check which JARs are present
+                    
+                    // Create Dockerfile using the WORKING JAR (without -jar-with-dependencies)
+                    writeFile file: 'Dockerfile', text: """
+                        FROM openjdk:17-jdk-slim
+                        WORKDIR /app
+                        COPY target/Java_Arithmetic_Code-0.0.1-SNAPSHOT.jar app.jar
+                        ENTRYPOINT ["java", "-jar", "app.jar"]
+                    """
+                    
+                    // Build and push the image
+                    docker.build("ninadpatil22/java_arithmetic_code:${env.BUILD_ID}").push()
+                    docker.build("ninadpatil22/java_arithmetic_code:latest").push()
+                }
+            }
+        }
+
+        stage('Push Image to Docker Hub') {
+            agent any
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'Docker_Token', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                    script {
+                        echo "Pushing Docker image to Docker Hub..."
+                        sh """
+                            echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
+                            docker push "${DOCKER_USERNAME}/java_arithmetic_code:${BUILD_ID}"
+                            docker push "${DOCKER_USERNAME}/java_arithmetic_code:latest"
+                        """
+                    }
+                }
+            }
+        }
+        
+        stage('Deploy App to Kubernetes') {
+            agent any
+            steps {
+                script {
+                    echo "Deploying to Kubernetes..."
+                    sh 'kubectl version --client'
+                    sh 'kubectl apply -f deployment.yaml'
+                    echo "Application deployed successfully!"
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Cleaning up workspace...'
+            cleanWs()
+        }
+        success {
+            echo 'Pipeline executed successfully!'
+        }
+        failure {
+            echo 'Pipeline execution failed.'
+        }
+    }
+}
