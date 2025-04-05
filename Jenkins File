@@ -16,6 +16,7 @@ pipeline {
             agent any
             steps {
                 echo "Checking out code from ${BRANCH} branch..."
+                cleanWs()
                 git branch: "${BRANCH}", url: "${GIT_REPO}"
             }
         }
